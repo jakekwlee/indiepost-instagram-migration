@@ -1,0 +1,36 @@
+{
+  "extends": "airbnb",
+  "rules": {
+    "strict": 0,
+    "no-console": "off",
+    "global-require": "off",
+    "no-mixed-operators": "off",
+    "comma-dangle": [
+      "error",
+      {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "ignore"
+      }
+    ],
+    "arrow-parens": "off",
+    "function-paren-newline": "off",
+    "object-curly-newline": "off",
+    "arrow-body-style": "off",
+    "no-plusplus": "off"
+  },
+  "globals": {
+    "window": true,
+    "localStorage": true,
+    "jest": true,
+    "describe": true,
+    "it": true,
+    "expect": true,
+    "before": true,
+    "beforeAll": true,
+    "after": true,
+    "afterAll": true
+  }
+}
