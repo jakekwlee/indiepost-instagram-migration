@@ -1,4 +1,4 @@
-const mysql = require('mysql2/promise');
+const mysql = require('mysql');
 const config = require('./config');
 const { SELECT_INSTAGRAM_INSERTED, UPDATE_POST } = require('./namedQueries');
 
@@ -12,13 +12,7 @@ module.exports = (() => {
 
   const connect = () => {
     if (!connection) {
-      connection = mysql.createPool(config.mysqlConfig);
-    }
-  };
-
-  const destroy = () => {
-    if (connection && connection.destroy) {
-      connection.destroy();
+      connection = mysql.createConnection(config.mysqlConfig);
     }
   };
 
@@ -33,12 +27,45 @@ module.exports = (() => {
     });
   };
 
-  const getPostList = async () => executeQuery(SELECT_INSTAGRAM_INSERTED);
+  const startTransaction = async () => {
+    await executeQuery('SET AUTOCOMMIT = TRUE');
+    await executeQuery('START TRANSACTION');
+  };
 
-  const updatePost = async (id, content) => executeQuery(UPDATE_POST, { id, content });
+  const commit = async () => {
+    await executeQuery('COMMIT');
+    await executeQuery('SET AUTOCOMMIT = FALSE');
+  };
+
+  const rollback = async () => {
+    await executeQuery('ROLLBACK');
+    await executeQuery('SET AUTOCOMMIT = FALSE');
+  };
+
+  const isConnected = () => !!connection;
+
+  const destroy = () => {
+    if (connection && connection.destroy) {
+      connection.destroy();
+    }
+  };
+
+  const getPostList = () => {
+    return executeQuery(SELECT_INSTAGRAM_INSERTED);
+  };
+
+  const updatePost = (id, content) => {
+    return executeQuery(UPDATE_POST, [content, id]).then(res => {
+      return { ...res, id };
+    });
+  };
 
   return {
     connect,
+    startTransaction,
+    commit,
+    rollback,
+    isConnected,
     destroy,
     getPostList,
     updatePost,

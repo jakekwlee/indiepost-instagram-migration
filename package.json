@@ -4,13 +4,14 @@
   "description": "AWS labmda function for migrate INDIEPOST contents(instagram embeded)",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --verbose"
   },
   "author": "Jake KW LEE <bwv1050@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "mysql2": "^1.6.5",
+    "lodash.keyby": "^4.6.0",
+    "mysql": "^2.16.0",
     "node-fetch": "^2.3.0"
   },
   "devDependencies": {
@@ -19,7 +20,7 @@
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-react": "^7.12.4",
-    "jest": "^24.1.0",
+    "jest": "^23.6.0",
     "node-lambda": "^0.13.0"
   }
 }

@@ -215,3 +215,4 @@ Temporary Items
 deploy.env
 event.json
 .lambda
+results/
