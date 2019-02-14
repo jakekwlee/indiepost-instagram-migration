@@ -1,6 +1,8 @@
 const keyBy = require('lodash.keyby');
+const flatten = require('lodash.flatten');
 const repository = require('./repository');
 const utils = require('./utils');
+const config = require('./config');
 
 const migrate = async () => {
   repository.connect();
@@ -15,31 +17,32 @@ const migrate = async () => {
     };
   });
 
-  const instagramUrls = posts.flatMap(post => post.urls);
+  const instagramUrls = flatten(posts.map(post => post.urls));
   const instagramMetadataList = await Promise.all(
     instagramUrls.map(url => utils.fetchOpenGraphMetadata(url))
   );
   const instagramMetadata = keyBy(instagramMetadataList, 'originalUrl');
-  const brokenPosts = [];
 
   posts = posts.map(post => {
     const metadataList = post.urls.map(url => instagramMetadata[url]);
-    const brokenLink = metadataList.filter(metadata => metadata.isBroken);
-    if (brokenLink.length > 0) brokenPosts.push(post.id);
     return {
       ...post,
       metadataList,
     };
   });
 
-  let instagramCount = 0;
-
-  posts = await Promise.all(
-    posts.map(post => {
-      instagramCount += post.metadataList.length;
-      return utils.replaceInstagramEmbeddedWithLinkBox(post);
+  const postIdsIncludingBrokenLinks = posts
+    .filter(post => {
+      const { metadataList } = post;
+      const brokenLinks = metadataList.filter(metadata => metadata.isBroken);
+      return brokenLinks.length > 0;
     })
-  );
+    .map(post => post.id);
+
+  const instagramCount = instagramMetadataList.filter(metadata => !metadata.isBroken).length;
+  const brokenInstagramCount = instagramMetadataList.length - instagramCount;
+
+  posts = await Promise.all(posts.map(post => utils.replaceInstagramEmbeddedWithLinkBox(post)));
 
   await repository.startTransaction();
 
@@ -51,16 +54,26 @@ const migrate = async () => {
   );
   const fixedPostIds = results.map(result => result.id);
 
-  console.log(fixedPostIds);
-  console.log(`${fixedPostIds.length} posts are fixed`);
-  console.log(`${instagramCount} instagram link boxes are inserted`);
-  console.log(`${brokenPosts.length} posts include broken links`);
-  console.log(brokenPosts);
+  const fixedPostURLs = fixedPostIds
+    .map(id => config.baseURL + id)
+    .reduce((prev, url) => `${prev}\n${url}`);
+  const brokenPostURLs = postIdsIncludingBrokenLinks
+    .map(id => config.baseURL + id)
+    .reduce((prev, url) => `${prev}\n${url}`);
 
-  if (process.env.NODE_ENV === 'test') {
-    await repository.rollback();
-  } else {
+  console.log(`${fixedPostIds.length} posts are fixed`);
+  console.log(`${instagramCount} instagram link boxes are attached`);
+  console.log(fixedPostURLs);
+  console.log('------------------------------------------');
+  console.log(`${postIdsIncludingBrokenLinks.length} posts include broken links`);
+  console.log(`${brokenInstagramCount} instagram links are broken (404 not found)`);
+  console.log(brokenPostURLs);
+
+  if (process.env.NODE_ENV === 'production') {
     await repository.commit();
+  } else {
+    await repository.rollback();
+    // await repository.commit();
   }
   repository.destroy();
 };

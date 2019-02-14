@@ -7,4 +7,8 @@ module.exports = {
     password: DB_PASSWORD || 'indiepost',
     database: DB_SCHEMA || 'indiepost',
   },
+  baseURL:
+    process.env.NODE_ENV === 'production'
+      ? 'https://www.indiepost.co.kr/post/'
+      : 'http://localhost/post/',
 };
