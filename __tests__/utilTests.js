@@ -57,24 +57,15 @@ describe('Test Utils', () => {
 
   describe('replaceInstagramEmbeddedWithLinkBox(post: Post): Post', () => {
     it('should return updated content properly', async () => {
-      const content1 = await readFile('./__tests__/assets/test_content_1.html');
-      const content2 = await readFile('./__tests__/assets/test_content_2.html');
-      const urls1 = utils.getInstagramUrlsFromContent(content1);
-      const urls2 = utils.getInstagramUrlsFromContent(content2);
-      const metadataList1 = await Promise.all(urls1.map(url => utils.fetchOpenGraphMetadata(url)));
-      const metadataList2 = await Promise.all(urls2.map(url => utils.fetchOpenGraphMetadata(url)));
+      const content = await readFile('./__tests__/assets/test_content.html');
+      const urls = utils.getInstagramUrlsFromContent(content);
+      const metadataList1 = await Promise.all(urls.map(url => utils.fetchOpenGraphMetadata(url)));
       const result1 = await utils.replaceInstagramEmbeddedWithLinkBox({
         id: 0,
-        content: content1,
+        content,
         metadataList: metadataList1,
       });
-      const result2 = await utils.replaceInstagramEmbeddedWithLinkBox({
-        id: 1,
-        content: content2,
-        metadataList: metadataList2,
-      });
-      await writeFile('./__tests__/results/result1.html', result1.content);
-      await writeFile('./__tests__/results/result2.html', result2.content);
+      await writeFile('./__tests__/results/result.html', result1.content);
     });
   });
 });
